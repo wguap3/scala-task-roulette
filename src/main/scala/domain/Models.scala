@@ -27,16 +27,16 @@ case class RoomMember(
                      joinedAt: Instant
                      )
 
-sealed trait Difficult
-case object Easy extends Difficult
-case object Medium extends Difficult
-case object Hard extends Difficult
+sealed trait Difficulty
+case object Easy extends Difficulty
+case object Medium extends Difficulty
+case object Hard extends Difficulty
 
 case class Task(
                id: UUID,
                title: String,
                description: String,
-               difficulty: Difficult,
+               difficulty: Difficulty,
                category: Option[String],
                roomId: UUID,
                createdBy: UUID,

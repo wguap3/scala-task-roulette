@@ -29,6 +29,9 @@ lazy val root = (project in file("."))
       "com.github.pureconfig" %% "pureconfig-core"        % "0.17.6",
       "com.github.pureconfig" %% "pureconfig-cats-effect" % "0.17.6",
 
-      "org.postgresql" % "postgresql" % "42.7.3"
+      "org.postgresql" % "postgresql" % "42.7.3",
+
+      "org.flywaydb" % "flyway-core"                 % "10.10.0",
+      "org.flywaydb" % "flyway-database-postgresql"  % "10.10.0"
     )
   )
