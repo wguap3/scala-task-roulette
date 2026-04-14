@@ -1,11 +1,12 @@
 package service
 
 import cats.effect.IO
-import domain.{Task, Difficulty, AppError, TaskNotFound, AccessDenied, Owner}
-import repository.task.TaskRepository
+import domain.*
 import repository.roomMember.RoomMemberRepository
-import java.util.UUID
+import repository.task.TaskRepository
+
 import java.time.Instant
+import java.util.UUID
 
 class TaskService(
                    taskRepo: TaskRepository,
@@ -23,15 +24,15 @@ class TaskService(
     roomMemberRepo.findByRoomAndUser(roomId, createdBy).flatMap {
       case Some(member) if member.role == Owner =>
         val task = Task(
-          id          = UUID.randomUUID(),
-          title       = title,
+          id = UUID.randomUUID(),
+          title = title,
           description = description,
-          difficulty  = difficulty,
-          category    = category,
-          roomId      = roomId,
-          createdBy   = createdBy,
-          createdAt   = Instant.now(),
-          isActive    = true
+          difficulty = difficulty,
+          category = category,
+          roomId = roomId,
+          createdBy = createdBy,
+          createdAt = Instant.now(),
+          isActive = true
         )
         taskRepo.create(task).map(_ => Right(task))
       case _ => IO.pure(Left(AccessDenied))
@@ -40,7 +41,7 @@ class TaskService(
   def findById(id: UUID): IO[Either[AppError, Task]] =
     taskRepo.findById(id).map {
       case Some(task) => Right(task)
-      case None       => Left(TaskNotFound(id))
+      case None => Left(TaskNotFound(id))
     }
 
   def findByRoom(roomId: UUID): IO[List[Task]] =

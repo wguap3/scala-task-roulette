@@ -9,13 +9,13 @@ import doobie.util.transactor.Transactor
 import java.util.UUID
 
 class UserRepositoryImpl(xa: Transactor[IO]) extends UserRepository:
-  def create(user:User): IO[Unit] =
+  def create(user: User): IO[Unit] =
     sql"""
     INSERT INTO users (id,name,created_at)
     VALUES (${user.id}, ${user.name}, ${user.createdAt})
     """.update.run.transact(xa).void
 
-  def findById(id:UUID): IO[Option[User]] =
+  def findById(id: UUID): IO[Option[User]] =
     sql"""
     SELECT id, name, created_at
     FROM users

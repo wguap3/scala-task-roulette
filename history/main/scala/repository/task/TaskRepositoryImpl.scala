@@ -12,13 +12,13 @@ import java.util.UUID
 class TaskRepositoryImpl(xa: Transactor[IO]) extends TaskRepository:
 
   given Meta[Difficulty] = Meta[String].timap {
-    case "easy"   => Easy
+    case "easy" => Easy
     case "medium" => Medium
-    case "hard"   => Hard
+    case "hard" => Hard
   } {
-    case Easy   => "easy"
+    case Easy => "easy"
     case Medium => "medium"
-    case Hard   => "hard"
+    case Hard => "hard"
   }
 
   def create(task: Task): IO[Unit] =

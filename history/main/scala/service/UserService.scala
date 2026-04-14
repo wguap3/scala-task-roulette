@@ -17,11 +17,11 @@ class UserService(userRepo: UserRepository):
     )
     userRepo.create(user) *> IO.pure(user)
 
-  def findById (id: UUID): IO[Either[AppError, User]] =
-  userRepo.findById(id).map {
-    case Some(user) => Right(user)
-    case None => Left(UserNotFound(id)) 
-  }
+  def findById(id: UUID): IO[Either[AppError, User]] =
+    userRepo.findById(id).map {
+      case Some(user) => Right(user)
+      case None => Left(UserNotFound(id))
+    }
 
   def findAll: IO[List[User]] =
     userRepo.findAll

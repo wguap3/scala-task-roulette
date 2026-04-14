@@ -12,10 +12,10 @@ import java.util.UUID
 class RoomMemberRepositoryImpl(xa: Transactor[IO]) extends RoomMemberRepository:
 
   given Meta[RoomRole] = Meta[String].timap {
-    case "owner"  => Owner
+    case "owner" => Owner
     case "member" => Member
   } {
-    case Owner  => "owner"
+    case Owner => "owner"
     case Member => "member"
   }
 

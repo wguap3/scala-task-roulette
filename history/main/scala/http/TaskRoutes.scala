@@ -32,41 +32,41 @@ class TaskRoutes(taskService: TaskService):
 
   val routes = HttpRoutes.of[IO] {
 
-    case req @ POST -> Root / "tasks" =>
+    case req@POST -> Root / "tasks" =>
       for
         dto <- req.as[CreateTaskDto]
         difficulty = dto.difficulty match
-          case "easy"   => Easy
+          case "easy" => Easy
           case "medium" => Medium
-          case _        => Hard
+          case _ => Hard
         result <- taskService.create(
-          title       = dto.title,
+          title = dto.title,
           description = dto.description,
-          difficulty  = difficulty,
-          category    = dto.category,
-          roomId      = dto.roomId,
-          createdBy   = dto.createdBy
+          difficulty = difficulty,
+          category = dto.category,
+          roomId = dto.roomId,
+          createdBy = dto.createdBy
         )
         resp <- result match
           case Right(task) => Created(task)
-          case Left(_)     => Forbidden("Нет прав")
+          case Left(_) => Forbidden("Нет прав")
       yield resp
 
     case GET -> Root / "tasks" / UUIDVar(id) =>
       taskService.findById(id).flatMap {
         case Right(task) => Ok(task)
-        case Left(_)     => NotFound("Задача не найдена")
+        case Left(_) => NotFound("Задача не найдена")
       }
 
     case GET -> Root / "rooms" / UUIDVar(roomId) / "tasks" =>
       taskService.findByRoom(roomId).flatMap(tasks => Ok(tasks))
 
-    case req @ DELETE -> Root / "tasks" / UUIDVar(id) =>
+    case req@DELETE -> Root / "tasks" / UUIDVar(id) =>
       for
-        dto    <- req.as[ArchiveTaskDto]
+        dto <- req.as[ArchiveTaskDto]
         result <- taskService.archive(id, dto.requesterId)
-        resp   <- result match
+        resp <- result match
           case Right(_) => Ok("Задача архивирована")
-          case Left(_)  => Forbidden("Нет прав")
+          case Left(_) => Forbidden("Нет прав")
       yield resp
   }

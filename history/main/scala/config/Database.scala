@@ -25,8 +25,8 @@ object Database:
   def transactor(config: DbConfig): Resource[IO, HikariTransactor[IO]] =
     HikariTransactor.newHikariTransactor[IO](
       driverClassName = config.driver,
-      url             = config.url,
-      user            = config.user,
-      pass            = config.password,
-      connectEC       = ExecutionContext.global
+      url = config.url,
+      user = config.user,
+      pass = config.password,
+      connectEC = ExecutionContext.global
     )

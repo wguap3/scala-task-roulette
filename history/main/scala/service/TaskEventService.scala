@@ -1,11 +1,12 @@
 package service
 
 import cats.effect.IO
-import domain.{TaskEvent, EventStatus, AppError, TaskNotFound}
-import repository.taskEvent.TaskEventRepository
+import domain.{AppError, EventStatus, TaskEvent, TaskNotFound}
 import repository.task.TaskRepository
-import java.util.UUID
+import repository.taskEvent.TaskEventRepository
+
 import java.time.Instant
+import java.util.UUID
 
 class TaskEventService(
                         taskEventRepo: TaskEventRepository,
@@ -23,13 +24,13 @@ class TaskEventService(
       case None => IO.pure(Left(TaskNotFound(taskId)))
       case Some(_) =>
         val event = TaskEvent(
-          id          = UUID.randomUUID(),
-          taskId      = taskId,
-          userId      = userId,
-          roomId      = roomId,
-          status      = status,
-          comment     = comment,
-          occurredAt  = Instant.now()
+          id = UUID.randomUUID(),
+          taskId = taskId,
+          userId = userId,
+          roomId = roomId,
+          status = status,
+          comment = comment,
+          occurredAt = Instant.now()
         )
         taskEventRepo.create(event).map(_ => Right(event))
     }

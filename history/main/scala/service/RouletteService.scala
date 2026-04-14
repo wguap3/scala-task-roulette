@@ -1,11 +1,12 @@
 package service
 
 import cats.effect.IO
-import domain.{Task, TaskEvent, InProgress, Skipped, Completed, AppError, NoTaskAvailable}
+import domain.*
 import repository.task.TaskRepository
 import repository.taskEvent.TaskEventRepository
-import java.util.UUID
+
 import java.time.Instant
+import java.util.UUID
 import scala.util.Random
 
 class RouletteService(
@@ -15,7 +16,7 @@ class RouletteService(
 
   def spin(roomId: UUID, userId: UUID): IO[Either[AppError, Task]] =
     for
-      tasks  <- taskRepo.findActiveByRoom(roomId)
+      tasks <- taskRepo.findActiveByRoom(roomId)
       events <- taskEventRepo.findByRoom(roomId)
     yield selectTask(tasks, events, userId)
 

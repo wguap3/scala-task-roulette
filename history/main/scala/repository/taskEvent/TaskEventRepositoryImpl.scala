@@ -12,12 +12,12 @@ import java.util.UUID
 class TaskEventRepositoryImpl(xa: Transactor[IO]) extends TaskEventRepository:
 
   given Meta[EventStatus] = Meta[String].timap {
-    case "completed"  => Completed
-    case "skipped"    => Skipped
+    case "completed" => Completed
+    case "skipped" => Skipped
     case "inprogress" => InProgress
   } {
-    case Completed  => "completed"
-    case Skipped    => "skipped"
+    case Completed => "completed"
+    case Skipped => "skipped"
     case InProgress => "inprogress"
   }
 

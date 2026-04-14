@@ -1,21 +1,19 @@
 import cats.effect.{IO, IOApp}
 import cats.syntax.semigroupk.*
-import config.{AppConfig, Database}
 import com.comcast.ip4s.*
+import config.{AppConfig, Database}
+import http.*
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.Router
 import org.http4s.server.middleware.CORS
 import pureconfig.ConfigSource
 import pureconfig.generic.derivation.default.*
-
-import repository.user.UserRepositoryImpl
 import repository.room.RoomRepositoryImpl
 import repository.roomMember.RoomMemberRepositoryImpl
 import repository.task.TaskRepositoryImpl
 import repository.taskEvent.TaskEventRepositoryImpl
-
-import service.{UserService, RoomService, TaskService, RouletteService, TaskEventService}
-import http.{UserRoutes, RoomRoutes, TaskRoutes, RouletteRoutes, TaskEventRoutes}
+import repository.user.UserRepositoryImpl
+import service.*
 
 object Main extends IOApp.Simple:
   def run: IO[Unit] =
@@ -26,22 +24,22 @@ object Main extends IOApp.Simple:
         _ <- Database.migrate(config.db)
         _ <- IO.println("Миграции применены!")
 
-        userRepo       = UserRepositoryImpl(xa)
-        roomRepo       = RoomRepositoryImpl(xa)
+        userRepo = UserRepositoryImpl(xa)
+        roomRepo = RoomRepositoryImpl(xa)
         roomMemberRepo = RoomMemberRepositoryImpl(xa)
-        taskRepo       = TaskRepositoryImpl(xa)
-        taskEventRepo  = TaskEventRepositoryImpl(xa)
+        taskRepo = TaskRepositoryImpl(xa)
+        taskEventRepo = TaskEventRepositoryImpl(xa)
 
-        userService      = UserService(userRepo)
-        roomService      = RoomService(roomRepo, roomMemberRepo)
-        taskService      = TaskService(taskRepo, roomMemberRepo)
+        userService = UserService(userRepo)
+        roomService = RoomService(roomRepo, roomMemberRepo)
+        taskService = TaskService(taskRepo, roomMemberRepo)
         taskEventService = TaskEventService(taskEventRepo, taskRepo)
-        rouletteService  = RouletteService(taskRepo, taskEventRepo)
+        rouletteService = RouletteService(taskRepo, taskEventRepo)
 
-        userRoutes      = UserRoutes(userService).routes
-        roomRoutes      = RoomRoutes(roomService).routes
-        taskRoutes      = TaskRoutes(taskService).routes
-        rouletteRoutes  = RouletteRoutes(rouletteService).routes
+        userRoutes = UserRoutes(userService).routes
+        roomRoutes = RoomRoutes(roomService).routes
+        taskRoutes = TaskRoutes(taskService).routes
+        rouletteRoutes = RouletteRoutes(rouletteService).routes
         taskEventRoutes = TaskEventRoutes(taskEventService).routes
 
         allRoutes = userRoutes <+> roomRoutes <+> taskRoutes <+> rouletteRoutes <+> taskEventRoutes

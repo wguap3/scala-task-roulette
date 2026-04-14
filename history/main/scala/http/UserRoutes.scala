@@ -2,16 +2,17 @@ package http
 
 import cats.effect.IO
 import io.circe.generic.auto.*
-import io.circe.{Encoder, Decoder}
+import io.circe.{Decoder, Encoder}
 import org.http4s.*
 import org.http4s.circe.CirceEntityCodec.*
 import org.http4s.dsl.io.*
 import service.UserService
-import java.util.UUID
-import java.time.Instant
 
-given Encoder[UUID]    = Encoder.encodeString.contramap(_.toString)
-given Decoder[UUID]    = Decoder.decodeString.emap(s =>
+import java.time.Instant
+import java.util.UUID
+
+given Encoder[UUID] = Encoder.encodeString.contramap(_.toString)
+given Decoder[UUID] = Decoder.decodeString.emap(s =>
   scala.util.Try(UUID.fromString(s)).toEither.left.map(_.getMessage)
 )
 given Encoder[Instant] = Encoder.encodeString.contramap(_.toString)
@@ -46,6 +47,6 @@ class UserRoutes(userService: UserService):
     case GET -> Root / "users" / UUIDVar(id) =>
       userService.findById(id).flatMap {
         case Right(user) => Ok(user)
-        case Left(_)     => NotFound("Пользователь не найден")
+        case Left(_) => NotFound("Пользователь не найден")
       }
   }
