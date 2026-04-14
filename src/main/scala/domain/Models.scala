@@ -35,7 +35,7 @@ case object Hard extends Difficulty
 case class Task(
                id: UUID,
                title: String,
-               description: String,
+               description: Option[String],
                difficulty: Difficulty,
                category: Option[String],
                roomId: UUID,
