@@ -54,3 +54,6 @@ class RoomService(
         }
       case _ => IO.pure(Left(AccessDenied))
     }
+
+  def getMembers(roomId: UUID): IO[List[RoomMember]] =
+    roomMemberRepo.findByRoom(roomId)

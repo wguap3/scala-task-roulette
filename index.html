@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Task Roulette</title>
+
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{
+          --bg:#F7F5F0;--surface:#FFFFFF;--surface2:#F0EDE6;--border:#E2DDD6;
+          --text:#1C1917;--text2:#78716C;--text3:#A8A29E;
+          --accent:#E54D2E;--accent-bg:#FEF2EE;
+          --green:#16A34A;--green-bg:#F0FDF4;
+          --yellow:#CA8A04;--yellow-bg:#FEFCE8;
+          --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.04);
+          --shadow-lg:0 8px 32px rgba(0,0,0,.12);--r:12px;
+        }
+        html{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+        button{cursor:pointer;font-family:inherit;font-size:14px;border:none;outline:none}
+        input,select,textarea{font-family:inherit;font-size:14px;outline:none}
+        .screen{display:none;min-height:100vh}
+        .screen.active{display:flex;flex-direction:column}
+
+        /* LOGIN */
+        #screen-login{align-items:center;justify-content:center;background:var(--bg)}
+        .login-box{background:var(--surface);border-radius:24px;padding:48px;width:100%;max-width:400px;box-shadow:var(--shadow-lg);text-align:center}
+        .login-logo{font-family:Georgia,'Times New Roman',serif;font-size:32px;margin-bottom:8px}
+        .login-logo span{color:var(--accent)}
+        .login-sub{color:var(--text2);margin-bottom:32px;font-size:13px}
+        .login-box input{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:16px;margin-bottom:12px;transition:border-color .15s}
+        .login-box input:focus{border-color:var(--text)}
+        .login-box input::placeholder{color:var(--text3)}
+        .btn-big{width:100%;padding:14px;border-radius:10px;background:var(--text);color:#fff;font-size:15px;font-weight:600;transition:opacity .15s,transform .1s}
+        .btn-big:hover{opacity:.88}
+        .btn-big:active{transform:scale(.98)}
+        .login-existing{margin-top:24px}
+        .login-existing-label{font-size:11px;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+        .existing-user{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);margin-bottom:6px;cursor:pointer;transition:border-color .15s,background .15s;text-align:left;width:100%;background:transparent}
+        .existing-user:hover{border-color:var(--text);background:var(--surface2)}
+        .avatar{width:32px;height:32px;border-radius:50%;background:var(--text);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+        .existing-user-name{font-weight:500;font-size:13px}
+
+        /* HEADER */
+        .app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+        .header-logo{font-family:'Instrument Serif',serif;font-size:20px}
+        .header-logo span{color:var(--accent)}
+        .header-user{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
+        .header-back{display:flex;align-items:center;gap:6px;background:none;color:var(--text2);font-size:13px;padding:6px 10px;border-radius:8px;transition:background .15s}
+        .header-back:hover{background:var(--surface2);color:var(--text)}
+
+        /* ROOMS */
+        #screen-rooms .content{max-width:600px;margin:0 auto;padding:32px 24px;width:100%}
+        .page-title{font-family:'Instrument Serif',serif;font-size:28px;margin-bottom:4px}
+        .page-sub{color:var(--text2);font-size:13px;margin-bottom:28px}
+        .create-card{background:var(--surface);border-radius:var(--r);padding:20px;margin-bottom:24px;border:1.5px dashed var(--border);display:flex;gap:10px;align-items:center}
+        .create-card input{flex:1;padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);transition:border-color .15s}
+        .create-card input:focus{border-color:var(--text)}
+        .btn-create{padding:10px 18px;border-radius:8px;background:var(--text);color:#fff;font-weight:500;transition:opacity .15s;flex-shrink:0}
+        .btn-create:hover{opacity:.85}
+        .room-card{background:var(--surface);border-radius:var(--r);padding:20px 24px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:border-color .15s,box-shadow .15s;margin-bottom:10px}
+        .room-card:hover{border-color:var(--text);box-shadow:var(--shadow)}
+        .room-card-name{font-weight:600;font-size:16px;margin-bottom:3px}
+        .room-card-meta{font-size:12px;color:var(--text2)}
+        .room-card-arrow{color:var(--text3);font-size:18px;transition:transform .15s}
+        .room-card:hover .room-card-arrow{transform:translateX(3px)}
+        .empty-state{text-align:center;padding:48px 24px;color:var(--text2);font-size:13px}
+        .empty-icon{font-size:36px;margin-bottom:12px}
+
+        /* ROOM */
+        .room-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0}
+        .room-name-header{font-weight:600;font-size:15px}
+        .room-role-badge{font-size:11px;padding:3px 8px;border-radius:20px;background:var(--accent-bg);color:var(--accent);font-weight:500}
+        .room-role-badge.member{background:var(--surface2);color:var(--text2)}
+
+        /* TABS */
+        .tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 24px;flex-shrink:0}
+        .tab{padding:14px 20px;font-size:13px;font-weight:500;color:var(--text2);background:none;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;margin-bottom:-1px}
+        .tab.active{color:var(--text);border-bottom-color:var(--text)}
+        .tab:hover{color:var(--text)}
+        .tab-panels{flex:1;overflow-y:auto}
+        .tab-panel{display:none;padding:28px 24px;max-width:680px;margin:0 auto}
+        .tab-panel.active{display:block}
+
+        /* ROULETTE */
+        .spin-area{background:var(--surface);border-radius:20px;padding:40px 32px;text-align:center;margin-bottom:24px;border:1.5px solid var(--border);position:relative;overflow:hidden}
+        .spin-area::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 120%,rgba(229,77,46,.06) 0%,transparent 70%);pointer-events:none}
+        .spin-hint{font-size:13px;color:var(--text2);margin-bottom:28px}
+        .spin-button{width:160px;height:160px;border-radius:50%;background:var(--text);color:#fff;font-family:Georgia,serif;font-size:22px;box-shadow:0 8px 32px rgba(0,0,0,.2),0 0 0 8px rgba(28,25,23,.06);transition:transform .2s,box-shadow .2s;position:relative;z-index:1}
+        .spin-button:hover{transform:scale(1.05);box-shadow:0 12px 40px rgba(0,0,0,.25),0 0 0 12px rgba(28,25,23,.08)}
+        .spin-button:active{transform:scale(.97)}
+        .spin-button:disabled{opacity:.5;cursor:not-allowed;transform:none !important}
+        .spin-button.spinning{animation:spinPulse .5s ease-in-out infinite alternate}
+        @keyframes spinPulse{from{transform:scale(1)}to{transform:scale(1.06)}}
+
+        /* ACTIVE TASK CARD */
+        .active-task-wrap{animation:fadeUp .3s ease}
+        .active-task-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+        .active-task-badge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:var(--accent-bg);color:var(--accent);text-transform:uppercase;letter-spacing:.6px}
+        .active-task-card{background:var(--surface);border-radius:var(--r);border:2px solid var(--text);overflow:hidden;margin-bottom:12px}
+        .active-task-top{background:var(--text);color:#fff;padding:16px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+        .active-task-title{font-size:18px;font-weight:600;line-height:1.3;flex:1}
+        .active-task-id{font-size:11px;opacity:.35;flex-shrink:0;padding-top:3px}
+        .active-task-body{padding:16px 20px}
+        .active-task-desc{font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6}
+        .active-task-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+        .active-task-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        .btn-act{padding:11px 16px;border-radius:9px;font-weight:600;font-size:13px;transition:opacity .15s,transform .1s;border:none}
+        .btn-act:active{transform:scale(.97)}
+        .btn-act-done{background:var(--green);color:#fff;grid-column:1/3}
+        .btn-act-done:hover{opacity:.88}
+        .btn-act-inprogress{background:var(--text);color:#fff}
+        .btn-act-inprogress:hover{opacity:.88}
+        .btn-act-skip{background:var(--surface2);color:var(--text2);border:1.5px solid var(--border) !important}
+        .btn-act-skip:hover{background:var(--border)}
+        .inprogress-note{font-size:12px;color:var(--text2);padding:10px 14px;background:var(--yellow-bg);border-radius:8px;border:1px solid #FDE68A;margin-top:8px}
+
+        /* RESULT CARD */
+        .result-card{border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:16px;animation:fadeUp .25s ease}
+        .result-card.done{background:var(--green-bg);border:1.5px solid #BBF7D0}
+        .result-card.skipped{background:var(--surface2);border:1.5px solid var(--border)}
+        .result-card.inprogress{background:var(--yellow-bg);border:1.5px solid #FDE68A}
+        .result-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+        .result-card.done .result-icon{background:#D1FAE5}
+        .result-card.skipped .result-icon{background:var(--border)}
+        .result-card.inprogress .result-icon{background:#FEF08A}
+        .result-body{flex:1;min-width:0}
+        .result-title{font-weight:600;font-size:14px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .result-card.done .result-title{color:var(--green)}
+        .result-card.inprogress .result-title{color:var(--yellow)}
+        .result-sub{font-size:12px;color:var(--text2)}
+        .spin-again-btn{width:100%;padding:12px;border-radius:10px;background:var(--text);color:#fff;font-weight:600;font-size:14px;transition:opacity .15s,transform .1s;border:none}
+        .spin-again-btn:hover{opacity:.85}
+        .spin-again-btn:active{transform:scale(.98)}
+
+        /* TASK CARD */
+        .task-card{background:var(--surface);border-radius:var(--r);border:1.5px solid var(--border);overflow:hidden;animation:fadeUp .3s ease;margin-bottom:16px}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        .task-card-top{background:var(--text);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+        .task-card-label{font-size:11px;opacity:.5;text-transform:uppercase;letter-spacing:.8px}
+        .task-card-body{padding:20px}
+        .task-card-title{font-family:'Instrument Serif',serif;font-size:22px;margin-bottom:8px;line-height:1.3}
+        .task-card-desc{font-size:13px;color:var(--text2);margin-bottom:14px}
+        .task-card-tags{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+        .tag{padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500}
+        .tag-easy{background:var(--green-bg);color:var(--green)}
+        .tag-medium{background:var(--yellow-bg);color:var(--yellow)}
+        .tag-hard{background:var(--accent-bg);color:var(--accent)}
+        .tag-cat{background:var(--surface2);color:var(--text2)}
+        .task-actions{display:flex;gap:8px;flex-wrap:wrap}
+        .btn-action{flex:1;min-width:100px;padding:10px 16px;border-radius:8px;font-weight:500;font-size:13px;transition:opacity .15s,transform .1s}
+        .btn-action:active{transform:scale(.97)}
+        .btn-done{background:var(--green);color:#fff}
+        .btn-done:hover{opacity:.88}
+        .btn-inprogress{background:var(--text);color:#fff}
+        .btn-inprogress:hover{opacity:.88}
+        .btn-skip{background:var(--surface2);color:var(--text2)}
+        .btn-skip:hover{background:var(--border)}
+
+        /* TASKS */
+        .add-task-form{background:var(--surface);border-radius:var(--r);padding:20px;margin-bottom:24px;border:1.5px solid var(--border)}
+        .form-title{font-weight:600;margin-bottom:16px;font-size:15px}
+        .field{margin-bottom:12px}
+        .field label{display:block;font-size:11px;color:var(--text2);margin-bottom:4px;font-weight:500;text-transform:uppercase;letter-spacing:.4px}
+        .field input,.field select,.field textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);transition:border-color .15s}
+        .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--text)}
+        .field textarea{resize:vertical;min-height:64px}
+        .fields-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .btn-submit{padding:10px 20px;border-radius:8px;background:var(--text);color:#fff;font-weight:500;transition:opacity .15s}
+        .btn-submit:hover{opacity:.85}
+        .section-label-sm{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:10px}
+        .task-item{background:var(--surface);border-radius:10px;padding:14px 16px;border:1.5px solid var(--border);display:flex;align-items:center;gap:12px;margin-bottom:8px}
+        .task-item-body{flex:1;min-width:0}
+        .task-item-title{font-weight:500;font-size:14px;margin-bottom:4px}
+        .task-item-tags{display:flex;gap:6px}
+        .btn-archive{padding:6px 12px;border-radius:6px;background:none;color:var(--text3);font-size:12px;border:1.5px solid var(--border);transition:all .15s;flex-shrink:0}
+        .btn-archive:hover{border-color:var(--accent);color:var(--accent)}
+
+        /* MEMBERS */
+        .section-title{font-weight:600;font-size:15px;margin-bottom:14px}
+        .member-item{background:var(--surface);border-radius:10px;padding:12px 16px;border:1.5px solid var(--border);display:flex;align-items:center;gap:12px;margin-bottom:8px}
+        .member-info{flex:1}
+        .member-name{font-weight:500;font-size:14px}
+        .member-role{font-size:12px;color:var(--text2)}
+        .invite-section{background:var(--surface);border-radius:var(--r);padding:20px;border:1.5px solid var(--border);margin-top:20px}
+        .invite-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1.5px solid var(--border);background:transparent;width:100%;text-align:left;transition:border-color .15s,background .15s;cursor:pointer;margin-bottom:6px}
+        .invite-item:hover{border-color:var(--text);background:var(--surface2)}
+        .invite-item.added{border-color:var(--green);background:var(--green-bg);cursor:default;pointer-events:none}
+        .invite-item-name{flex:1;font-size:13px;font-weight:500}
+        .invite-btn-label{font-size:12px;color:var(--text2)}
+        .invite-item.added .invite-btn-label{color:var(--green)}
+
+        /* HISTORY */
+        .history-item{background:var(--surface);border-radius:10px;padding:14px 16px;border:1.5px solid var(--border);display:flex;align-items:center;gap:14px;margin-bottom:8px}
+        .history-status{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+        .status-completed{background:var(--green-bg)}
+        .status-skipped{background:var(--accent-bg)}
+        .status-inprogress{background:var(--yellow-bg)}
+        .history-body{flex:1;min-width:0}
+        .history-task{font-weight:500;font-size:13px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .history-meta{font-size:12px;color:var(--text2)}
+        .history-time{font-size:11px;color:var(--text3);flex-shrink:0}
+
+        /* TOAST */
+        .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;transition:transform .25s,opacity .25s;opacity:0;z-index:999;white-space:nowrap;box-shadow:var(--shadow-lg)}
+        .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+        .toast.success{background:var(--green)}
+        .toast.error{background:var(--accent)}
+        .loader{display:inline-block;width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login" class="screen active">
+    <div class="login-box">
+        <div class="login-logo">Task<span>Roulette</span></div>
+        <div class="login-sub">Случайные задачи для твоей команды</div>
+        <input id="loginName" type="text" placeholder="Твоё имя..." maxlength="50"
+               onkeydown="if(event.key==='Enter')loginCreate()"/>
+        <button class="btn-big" onclick="loginCreate()">Начать →</button>
+        <div class="login-existing" id="existingBlock" style="display:none">
+            <div class="login-existing-label">Или войди как</div>
+            <div id="existingList"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ROOMS -->
+<div id="screen-rooms" class="screen">
+    <div class="app-header">
+        <div class="header-logo">Task<span>Roulette</span></div>
+        <div class="header-user">
+            <div class="avatar" id="ha1"></div>
+            <span id="hn1"></span>
+        </div>
+    </div>
+    <div class="content">
+        <div class="page-title">Комнаты</div>
+        <div class="page-sub">Создай комнату или войди в существующую</div>
+        <div class="create-card">
+            <input id="newRoomName" type="text" placeholder="Название команды..."
+                   maxlength="60" onkeydown="if(event.key==='Enter')createRoom()"/>
+            <button class="btn-create" onclick="createRoom()">Создать</button>
+        </div>
+        <div id="roomsList"></div>
+    </div>
+</div>
+
+<!-- ROOM -->
+<div id="screen-room" class="screen">
+    <div class="app-header">
+        <button class="header-back" onclick="goRooms()">← Комнаты</button>
+        <div class="header-logo">Task<span>Roulette</span></div>
+        <div class="header-user">
+            <div class="avatar" id="ha2"></div>
+            <span id="hn2"></span>
+        </div>
+    </div>
+    <div class="room-header">
+        <div style="display:flex;align-items:center;gap:10px">
+            <div class="room-name-header" id="roomHName"></div>
+            <div class="room-role-badge" id="roleBadge"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text3)" id="membersCount"></div>
+    </div>
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('roulette',this)">🎲 Рулетка</button>
+        <button class="tab" onclick="switchTab('tasks',this)">📋 Задачи</button>
+        <button class="tab" onclick="switchTab('members',this)">👥 Участники</button>
+        <button class="tab" onclick="switchTab('history',this)">📜 История</button>
+    </div>
+    <div class="tab-panels">
+
+        <div id="panel-roulette" class="tab-panel active">
+            <!-- STATE: idle -->
+            <div id="state-idle">
+                <div class="spin-area">
+                    <div class="spin-hint">Нажми — получишь случайную задачу из пула комнаты</div>
+                    <button class="spin-button" id="spinBtn" onclick="spin()">Крутить</button>
+                </div>
+                <div id="recentEvents"></div>
+            </div>
+            <!-- STATE: active task -->
+            <div id="state-active" style="display:none">
+                <div class="active-task-wrap">
+                    <div class="active-task-header">
+                        <span class="active-task-badge">🎲 Задача выдана</span>
+                        <span style="font-size:12px;color:var(--text2)">Выбери что делать</span>
+                    </div>
+                    <div class="active-task-card" id="activeTaskCard"></div>
+                    <div id="inprogressNote" style="display:none" class="inprogress-note">
+                        ▶ Задача взята в работу. Когда закончишь — отметь результат.
+                    </div>
+                </div>
+            </div>
+            <!-- STATE: result -->
+            <div id="state-result" style="display:none">
+                <div id="resultCard"></div>
+                <button class="spin-again-btn" onclick="resetSpin()">🎲 Крутить ещё раз</button>
+            </div>
+        </div>
+
+        <div id="panel-tasks" class="tab-panel">
+            <div id="addTaskSection" style="display:none">
+                <div class="add-task-form">
+                    <div class="form-title">Добавить задачу</div>
+                    <div class="field">
+                        <label>Название</label>
+                        <input id="tTitle" type="text" placeholder="Fix auth bug..."/>
+                    </div>
+                    <div class="field">
+                        <label>Описание (необязательно)</label>
+                        <textarea id="tDesc" placeholder="Подробности..."></textarea>
+                    </div>
+                    <div class="fields-row">
+                        <div class="field">
+                            <label>Сложность</label>
+                            <select id="tDiff">
+                                <option value="easy">🟢 Easy</option>
+                                <option value="medium" selected>🟡 Medium</option>
+                                <option value="hard">🔴 Hard</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Категория</label>
+                            <input id="tCat" type="text" placeholder="backend, qa..."/>
+                        </div>
+                    </div>
+                    <button class="btn-submit" onclick="createTask()">Добавить задачу</button>
+                </div>
+            </div>
+            <div class="section-label-sm" id="tasksCountLabel"></div>
+            <div id="tasksList"></div>
+        </div>
+
+        <div id="panel-members" class="tab-panel">
+            <div class="section-title">Участники</div>
+            <div id="membersList"></div>
+            <div id="inviteSection" style="display:none">
+                <div class="invite-section">
+                    <div class="form-title">Пригласить в комнату</div>
+                    <div style="font-size:13px;color:var(--text2);margin-bottom:12px">Нажми на пользователя чтобы добавить</div>
+                    <div id="inviteList"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="panel-history" class="tab-panel">
+            <div id="historyList"></div>
+        </div>
+
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const API = 'http://localhost:8080';
+    let me = null, room = null, myRole = null, currentTask = null, allTasks = [];
+
+    function $(id) { return document.getElementById(id); }
+    function initials(n) { return (n||'??').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2); }
+    function strColor(s) {
+      const c = ['#C84B31','#16A34A','#2563EB','#7C3AED','#B45309','#0F766E'];
+      let h = 0; for (let ch of (s||'x')) h = (h*31 + ch.charCodeAt(0)) % c.length; return c[h];
+    }
+    function show(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      $(id).classList.add('active');
+    }
+    function toast(msg, type='') {
+      const el = $('toast'); el.textContent = msg; el.className = 'toast show ' + type;
+      clearTimeout(el._t); el._t = setTimeout(() => el.className='toast', 2600);
+    }
+    async function api(method, path, body) {
+      const o = { method, headers: { 'Content-Type': 'application/json' } };
+      if (body) o.body = JSON.stringify(body);
+      const r = await fetch(API + path, o);
+      if (!r.ok) { const t = await r.text().catch(()=>''); throw new Error(t || r.statusText); }
+      const t = await r.text(); return t ? JSON.parse(t) : null;
+    }
+    function setUser(u) {
+      me = u;
+      ['ha1','ha2'].forEach(id => { $(id).textContent = initials(u.name); $(id).style.background = strColor(u.name); });
+      ['hn1','hn2'].forEach(id => $(id).textContent = u.name);
+      localStorage.setItem('me', JSON.stringify(u));
+    }
+
+    // ── LOGIN ──
+    async function loadExisting() {
+      try {
+        const users = await api('GET', '/users');
+        if (!users || !users.length) return;
+        $('existingBlock').style.display = 'block';
+        $('existingList').innerHTML = users.map(u => `
+          <button class="existing-user" onclick="loginAs('${u.id}','${escQ(u.name)}')">
+            <div class="avatar" style="background:${strColor(u.name)}">${initials(u.name)}</div>
+            <span class="existing-user-name">${esc(u.name)}</span>
+          </button>`).join('');
+      } catch(e) {}
+    }
+    async function loginCreate() {
+      const name = $('loginName').value.trim();
+      if (!name) return toast('Введи имя', 'error');
+      try {
+        const u = await api('POST', '/users', { name });
+        loginAs(u.id, u.name);
+      } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+    }
+    function loginAs(id, name) {
+      setUser({ id, name });
+      show('screen-rooms');
+      loadRooms();
+    }
+
+    // ── ROOMS ──
+    // Комнаты храним в localStorage чтобы не терять связь
+    let myRooms = JSON.parse(localStorage.getItem('rooms') || '[]');
+    function saveRooms() { localStorage.setItem('rooms', JSON.stringify(myRooms)); }
+
+    function loadRooms() {
+      const el = $('roomsList');
+      if (!myRooms.length) {
+        el.innerHTML = `<div class="empty-state"><div class="empty-icon">🚪</div>Нет комнат. Создай первую!</div>`; return;
+      }
+      el.innerHTML = myRooms.map(r => `
+        <div class="room-card" data-room-id="${esc(r.id)}" data-room-name="${esc(r.name)}">
+          <div>
+            <div class="room-card-name">${esc(r.name)}</div>
+            <div class="room-card-meta">Нажми чтобы войти</div>
+          </div>
+          <div class="room-card-arrow">→</div>
+        </div>`).join('');
+
+      el.querySelectorAll('.room-card').forEach(card => {
+        card.addEventListener('click', () => {
+          enterRoom(card.dataset.roomId, card.dataset.roomName);
+        });
+      });
+    }
+
+    async function createRoom() {
+      const name = $('newRoomName').value.trim();
+      if (!name) return toast('Введи название', 'error');
+      try {
+        // FIX: createdBy передаётся правильно
+        const r = await api('POST', '/rooms', { name, createdBy: me.id });
+        $('newRoomName').value = '';
+        // Добавляем в список и сразу входим
+        if (!myRooms.find(x => x.id === r.id)) {
+          myRooms.unshift({ id: r.id, name: r.name });
+          saveRooms();
+        }
+        toast('Комната создана', 'success');
+        loadRooms();
+        // FIX: сразу входим — владелец уже добавлен на бэке
+        enterRoom(r.id, r.name);
+      } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+    }
+
+    function goRooms() { show('screen-rooms'); loadRooms(); }
+
+    // ── ROOM ──
+    async function enterRoom(id, name) {
+      room = { id, name };
+      currentTask = null; allTasks = []; inprogressTask = null;
+      spinState = 'idle';
+
+      myRole = 'member';
+      try {
+        const [members, roomData] = await Promise.all([
+          api('GET', `/rooms/${id}/members`).catch(()=>[]),
+          api('GET', `/rooms/${id}`).catch(()=>null)
+        ]);
+
+        // 1. Самый надёжный способ: смотрим createdBy из GET /rooms/:id
+        if (roomData && roomData.createdBy === me.id) {
+          myRole = 'owner';
+        } else {
+          // 2. Смотрим role в списке участников — Scala circe сериализует sealed trait
+          // как {"Owner":{}} или как строку "Owner" — обрабатываем оба варианта
+          const me_member = (members||[]).find(x => x.userId === me.id);
+          if (me_member) {
+            const roleStr = (typeof me_member.role === 'string'
+              ? me_member.role
+              : Object.keys(me_member.role || {})[0] || '').toLowerCase();
+            myRole = roleStr.includes('owner') ? 'owner' : 'member';
+          }
+        }
+        $('membersCount').textContent = (members||[]).length + ' участников';
+        if (roomData) room = { ...room, createdBy: roomData.createdBy };
+      } catch(e) {
+        $('membersCount').textContent = '';
+      }
+
+      $('roleBadge').textContent = myRole === 'owner' ? 'Владелец' : 'Участник';
+      $('roleBadge').className = 'room-role-badge' + (myRole === 'member' ? ' member' : '');
+      // Показываем форму добавления задач ДО loadTasks
+      $('addTaskSection').style.display = myRole === 'owner' ? 'block' : 'none';
+
+      show('screen-room');
+      $('roomHName').textContent = name;
+      $('spinResult').innerHTML = '';
+      document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===0));
+      document.querySelectorAll('.tab-panel').forEach((p,i) => p.classList.toggle('active', i===0));
+      setSpinState('idle');
+      await loadTasks();
+      loadRecentEvents();
+
+      // FIX: если не в списке комнат — добавляем
+      if (!myRooms.find(x => x.id === id)) {
+        myRooms.unshift({ id, name });
+        saveRooms();
+      }
+    }
+
+    // ── TABS ──
+    function switchTab(name, btn) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      $('panel-' + name).classList.add('active');
+      if (name === 'tasks') loadTasks();
+      if (name === 'members') loadMembers();
+      if (name === 'history') loadHistory();
+    }
+
+    // ── ROULETTE STATE MACHINE ──
+    // states: idle | active | inprogress | result
+    let spinState = 'idle';
+    let inprogressTask = null; // задача которую взяли в работу
+
+    function setSpinState(s) {
+      spinState = s;
+      $('state-idle').style.display   = s === 'idle'   ? 'block' : 'none';
+      $('state-active').style.display = (s === 'active' || s === 'inprogress') ? 'block' : 'none';
+      $('state-result').style.display = s === 'result'  ? 'block' : 'none';
+      if (s === 'inprogress') {
+        $('inprogressNote').style.display = 'block';
+      } else {
+        $('inprogressNote').style.display = 'none';
+      }
+    }
+
+    function resetSpin() {
+      currentTask = null;
+      inprogressTask = null;
+      setSpinState('idle');
+      loadRecentEvents();
+    }
+
+    async function spin() {
+      // Если задача в работе — не даём крутить новую
+      if (spinState === 'inprogress') {
+        toast('Сначала закрой текущую задачу', 'error'); return;
+      }
+      const btn = $('spinBtn');
+      btn.classList.add('spinning');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="loader"></div>';
+      try {
+        const task = await api('GET', `/rooms/${room.id}/spin?userId=${me.id}`);
+        currentTask = task;
+        renderActiveTask(task);
+        setSpinState('active');
+      } catch(e) {
+        $('state-idle').querySelector('.spin-area').insertAdjacentHTML('afterend',
+          `<div class="empty-state" style="padding:24px"><div class="empty-icon">🎯</div>Нет доступных задач — добавь во вкладке «Задачи»</div>`);
+        setTimeout(() => {
+          const el = $('state-idle').querySelector('.empty-state');
+          if (el) el.remove();
+        }, 3000);
+      } finally {
+        btn.classList.remove('spinning');
+        btn.disabled = false;
+        btn.textContent = 'Крутить';
+      }
+    }
+
+    function renderActiveTask(t) {
+      const d = { easy:'🟢 Easy', medium:'🟡 Medium', hard:'🔴 Hard' };
+      $('activeTaskCard').innerHTML = `
+        <div class="active-task-top">
+          <div class="active-task-title">${esc(t.title)}</div>
+          <div class="active-task-id">#${t.id.slice(0,6)}</div>
+        </div>
+        <div class="active-task-body">
+          ${t.description ? `<div class="active-task-desc">${esc(t.description)}</div>` : ''}
+          <div class="active-task-tags">
+            <span class="tag tag-${t.difficulty}">${d[t.difficulty]||t.difficulty}</span>
+            ${t.category ? `<span class="tag tag-cat">${esc(t.category)}</span>` : ''}
+          </div>
+          <div class="active-task-actions">
+            <button class="btn-act btn-act-done" onclick="sendEvent('completed')">✓ Выполнено</button>
+            <button class="btn-act btn-act-inprogress" id="btnInprogress" onclick="takeInProgress()">▶ Беру в работу</button>
+            <button class="btn-act btn-act-skip" onclick="sendEvent('skipped')">✕ Пропустить</button>
+          </div>
+        </div>`;
+    }
+
+    // «Беру в работу» — задача остаётся видна, шлём событие, но не убираем карточку
+    async function takeInProgress() {
+      if (!currentTask) return;
+      try {
+        await api('POST', '/events', {
+          taskId: currentTask.id, userId: me.id,
+          roomId: room.id, status: 'in_progress', comment: null
+        });
+        inprogressTask = currentTask;
+        // Меняем кнопки: убираем «Беру», оставляем «Выполнено» и «Пропустить»
+        $('btnInprogress').style.display = 'none';
+        // Растягиваем «Выполнено» на всю ширину
+        document.querySelector('.btn-act-done').style.gridColumn = '1/3';
+        setSpinState('inprogress');
+        toast('Задача взята в работу', '');
+      } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+    }
+
+    async function sendEvent(status) {
+      if (!currentTask) return;
+      const statusMap = { completed:'completed', skipped:'skipped' };
+      try {
+        await api('POST', '/events', {
+          taskId: currentTask.id, userId: me.id,
+          roomId: room.id, status: statusMap[status] || status, comment: null
+        });
+        showResult(status, currentTask);
+        currentTask = null;
+        inprogressTask = null;
+        setSpinState('result');
+      } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+    }
+
+    function showResult(status, task) {
+      const cfg = {
+        completed: { cls:'done',      icon:'✓', label:'Выполнено!',    sub:'Отличная работа' },
+        skipped:   { cls:'skipped',   icon:'✕', label:'Пропущено',     sub:'Задача вернётся в пул' },
+      };
+      const c = cfg[status] || { cls:'done', icon:'✓', label:'Готово', sub:'' };
+      $('resultCard').innerHTML = `
+        <div class="result-card ${c.cls}">
+          <div class="result-icon">${c.icon}</div>
+          <div class="result-body">
+            <div class="result-title">${esc(task.title)}</div>
+            <div class="result-sub">${c.sub}</div>
+          </div>
+        </div>`;
+    }
+
+    async function loadRecentEvents() {
+      try {
+        const events = (await api('GET', `/rooms/${room.id}/events`).catch(()=>[])) || [];
+        if (!events.length) { $('recentEvents').innerHTML = ''; return; }
+        const taskMap = {};
+        allTasks.forEach(t => taskMap[t.id] = t.title);
+        const last = [...events].reverse().slice(0, 3);
+        const ic  = { completed:'✓', skipped:'✕', in_progress:'▶', inprogress:'▶' };
+        const sc  = { completed:'status-completed', skipped:'status-skipped', in_progress:'status-inprogress', inprogress:'status-inprogress' };
+        const sl  = { completed:'Выполнено', skipped:'Пропущено', in_progress:'В работе', inprogress:'В работе' };
+        $('recentEvents').innerHTML = `
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:10px">Последние события</div>
+          ${last.map(e => `
+            <div class="history-item" style="margin-bottom:8px">
+              <div class="history-status ${sc[e.status]||''}">${ic[e.status]||'?'}</div>
+              <div class="history-body">
+                <div class="history-task">${esc(taskMap[e.taskId]||'#'+e.taskId.slice(0,6))}</div>
+                <div class="history-meta">${sl[e.status]||e.status}</div>
+              </div>
+              <div class="history-time">${new Date(e.occurredAt).toLocaleString('ru',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+            </div>`).join('')}`;
+      } catch(e) {}
+    }
+
+    // ── TASKS ──
+    async function loadTasks() {
+      try {
+        allTasks = await api('GET', `/rooms/${room.id}/tasks`) || [];
+        $('tasksCountLabel').textContent = allTasks.length + ' задач в пуле';
+        if (!allTasks.length) {
+          $('tasksList').innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div>${myRole==='owner' ? 'Добавь первую задачу выше' : 'Задач пока нет'}</div>`;
+          return;
+        }
+        const d = { easy:'🟢 Easy', medium:'🟡 Medium', hard:'🔴 Hard' };
+        $('tasksList').innerHTML = allTasks.map(t => `
+          <div class="task-item">
+            <div class="task-item-body">
+              <div class="task-item-title">${esc(t.title)}</div>
+              <div class="task-item-tags">
+                <span class="tag tag-${t.difficulty}" style="font-size:11px;padding:2px 8px">${d[t.difficulty]||t.difficulty}</span>
+                ${t.category ? `<span class="tag tag-cat" style="font-size:11px;padding:2px 8px">${esc(t.category)}</span>` : ''}
+              </div>
+            </div>
+            ${myRole==='owner' ? `<button class="btn-archive" onclick="archiveTask('${t.id}')">Архив</button>` : ''}
+          </div>`).join('');
+      } catch(e) { toast('Ошибка загрузки задач: ' + e.message, 'error'); }
+    }
+    async function createTask() {
+      const title = $('tTitle').value.trim();
+      if (!title) return toast('Введи название', 'error');
+      try {
+        await api('POST', '/tasks', {
+          title,
+          description: $('tDesc').value.trim() || null,
+          difficulty: $('tDiff').value,
+          category: $('tCat').value.trim() || null,
+          roomId: room.id,
+          createdBy: me.id
+        });
+        $('tTitle').value = ''; $('tDesc').value = ''; $('tCat').value = '';
+        toast('Задача добавлена', 'success');
+        loadTasks();
+      } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+    }
+    async function archiveTask(id) {
+      try {
+        await api('DELETE', `/tasks/${id}`, { requesterId: me.id });
+        toast('Задача архивирована');
+        loadTasks();
+      } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+    }
+
+    // ── MEMBERS ──
+    async function loadMembers() {
+      try {
+        const [members, allUsers] = await Promise.all([
+          api('GET', `/rooms/${room.id}/members`).catch(()=>[]),
+          api('GET', '/users').catch(()=>[])
+        ]);
+
+        const uMap = {};
+        (allUsers||[]).forEach(u => uMap[u.id] = u.name);
+
+        $('membersCount').textContent = (members||[]).length + ' участников';
+
+        if (!members || !members.length) {
+          $('membersList').innerHTML = `<div class="empty-state" style="padding:16px 0"><div class="empty-icon">👥</div>Только ты</div>`;
+        } else {
+          $('membersList').innerHTML = members.map(m => {
+            // Scala circe сериализует sealed trait как {"Owner":{}} или строку "Owner"
+            const roleStr = (typeof m.role === 'string'
+              ? m.role
+              : Object.keys(m.role || {})[0] || '').toLowerCase();
+            const isOwner = roleStr.includes('owner');
+            const name = uMap[m.userId] || m.userId.slice(0,8)+'...';
+            return `
+              <div class="member-item">
+                <div class="avatar" style="background:${strColor(name)}">${initials(name)}</div>
+                <div class="member-info">
+                  <div class="member-name">${esc(name)}</div>
+                  <div class="member-role">${isOwner ? 'Владелец' : 'Участник'}</div>
+                </div>
+              </div>`;
+          }).join('');
+        }
+
+        // FIX: блок приглашения показываем только владельцу
+        if (myRole === 'owner') {
+          $('inviteSection').style.display = 'block';
+          const memberIds = new Set((members||[]).map(m => m.userId));
+          // FIX: исключаем себя и уже добавленных
+          const toInvite = (allUsers||[]).filter(u => !memberIds.has(u.id) && u.id !== me.id);
+          if (!toInvite.length) {
+            $('inviteList').innerHTML = `<div style="font-size:13px;color:var(--text3);padding:8px 0">Все пользователи уже в комнате</div>`;
+          } else {
+            $('inviteList').innerHTML = toInvite.map(u => `
+              <button class="invite-item" id="inv-${u.id}" onclick="inviteUser('${u.id}','${escQ(u.name)}')">
+                <div class="avatar" style="background:${strColor(u.name)};width:28px;height:28px;font-size:11px">${initials(u.name)}</div>
+                <span class="invite-item-name">${esc(u.name)}</span>
+                <span class="invite-btn-label">Добавить →</span>
+              </button>`).join('');
+          }
+        } else {
+          $('inviteSection').style.display = 'none';
+        }
+      } catch(e) { toast('Ошибка загрузки участников: ' + e.message, 'error'); }
+    }
+
+    async function inviteUser(userId, name) {
+      try {
+        await api('POST', `/rooms/${room.id}/members`, { userId, requesterId: me.id });
+        const btn = $('inv-' + userId);
+        if (btn) {
+          btn.classList.add('added');
+          btn.querySelector('.invite-btn-label').textContent = '✓ Добавлен';
+        }
+        toast(name + ' добавлен', 'success');
+        // обновляем счётчик
+        const members = await api('GET', `/rooms/${room.id}/members`).catch(()=>[]);
+        $('membersCount').textContent = (members||[]).length + ' участников';
+      } catch(e) { toast('Ошибка: ' + e.message, 'error'); }
+    }
+
+    // ── HISTORY ──
+    async function loadHistory() {
+      try {
+        const events = await api('GET', `/rooms/${room.id}/events`) || [];
+        if (!events.length) {
+          $('historyList').innerHTML = `<div class="empty-state"><div class="empty-icon">📜</div>История пуста</div>`; return;
+        }
+        const taskMap = {};
+        allTasks.forEach(t => taskMap[t.id] = t.title);
+
+        const ic  = { completed:'✓', skipped:'✕', in_progress:'▶', inprogress:'▶' };
+        const sc  = { completed:'status-completed', skipped:'status-skipped', in_progress:'status-inprogress', inprogress:'status-inprogress' };
+        const sl  = { completed:'Выполнено', skipped:'Пропущено', in_progress:'В работе', inprogress:'В работе' };
+
+        $('historyList').innerHTML = [...events].reverse().map(e => `
+          <div class="history-item">
+            <div class="history-status ${sc[e.status]||''}">${ic[e.status]||'?'}</div>
+            <div class="history-body">
+              <div class="history-task">${esc(taskMap[e.taskId] || 'Задача #' + e.taskId.slice(0,6))}</div>
+              <div class="history-meta">${sl[e.status]||e.status}</div>
+            </div>
+            <div class="history-time">${new Date(e.occurredAt).toLocaleString('ru',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+          </div>`).join('');
+      } catch(e) { toast('Ошибка загрузки истории: ' + e.message, 'error'); }
+    }
+
+    // ── HELPERS ──
+    function esc(s)  { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function escQ(s) { return String(s||'').replace(/'/g,"\\'"); }
+
+    // ── INIT ──
+    (function() {
+      const saved = localStorage.getItem('me');
+      if (saved) {
+        try {
+          const u = JSON.parse(saved);
+          setUser(u);
+          show('screen-rooms');
+          loadRooms();
+          return;
+        } catch(e) {}
+      }
+      loadExisting();
+    })();
+</script>
+</body>
+</html>
